@@ -46,6 +46,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   console.log("Login attempt:", email, role);
 
+  // Check if the user exists in the database
   const user = await User.findOne({ email });
   if (!user) {
     res.status(400);
@@ -54,7 +55,7 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   console.log("User roles from DB:", user.roles);
 
-  // Role validation if role is provided in the login request
+  // Role validation before password validation
   if (role) {
     const normalizedRoles = Array.isArray(user.roles) ? user.roles.map(r => r.toLowerCase()) : [];
     const requestedRole = role.toLowerCase();
@@ -75,7 +76,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid credentials');
   }
 
-  // Generate a token after successful login
+  // Generate JWT token and send it back along with roles
   const token = generateToken(user._id, user.roles);
   res.json({ message: 'Login successful', token, roles: user.roles });
 });

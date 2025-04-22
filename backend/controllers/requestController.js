@@ -43,14 +43,10 @@ export const getAllRequests = async (req, res) => {
 export const getMyRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find({ customer: req.user._id })
-      .populate('customer', 'name email') // Populate customer details
-      .populate('worker', 'name email'); // Optionally populate worker details if assigned
+      .populate('customer', 'name email')
+      .populate('worker', 'name email');
 
-    if (!requests.length) {
-      return res.status(404).json({ message: 'No requests found' });
-    }
-
-    res.json(requests);
+    res.status(200).json(requests); // Always return 200 with results (even if empty)
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

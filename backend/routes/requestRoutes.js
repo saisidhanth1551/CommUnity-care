@@ -1,40 +1,28 @@
-import express from 'express'; // ES Module import
-import { 
-  createRequest, 
-  getAllRequests, 
-  getMyRequests, 
-  acceptRequest, 
-  completeRequest 
+import express from 'express';
+import {
+  createRequest,
+  getAllRequests,
+  getMyRequests,
+  acceptRequest,
+  completeRequest,
 } from '../controllers/requestController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { isWorker, isCustomer } from '../middleware/roleMiddleware.js'; // Import role middleware
 
 const router = express.Router();
 
-// @route   POST /api/requests
-// @desc    Create a new service request
-// @access  Private (Customer)
-router.post('/', protect, isCustomer, createRequest);
+// Route to create a new request
+router.post('/', protect, createRequest);
 
-// @route   GET /api/requests
-// @desc    Get all service requests (Admin/Worker)
-// @access  Private (Worker/Admin)
-router.get('/', protect, isWorker, getAllRequests);
+// Route to get all requests (for admin/worker)
+router.get('/', protect, getAllRequests);
 
-// @route   GET /api/requests/my
-// @desc    Get service requests created by logged-in customer
-// @access  Private (Customer)
-router.get('/my', protect, isCustomer, getMyRequests);
+// ✅ This is the route you're trying to access from frontend
+router.get('/my', protect, getMyRequests);
 
-// @route   PUT /api/requests/:id/accept
-// @desc    Worker accepts a request
-// @access  Private (Worker)
-router.put('/:id/accept', protect, isWorker, acceptRequest);
+// Route to accept a request
+router.put('/accept/:id', protect, acceptRequest);
 
-// @route   PUT /api/requests/:id/complete
-// @desc    Mark request as completed
-// @access  Private (Worker or Customer)
-router.put('/:id/complete', protect, [isWorker, isCustomer], completeRequest); // Allow both Worker and Customer
+// Route to complete a request
+router.put('/complete/:id', protect, completeRequest);
 
-// Default export (ES Module)
 export default router;
