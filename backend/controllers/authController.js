@@ -5,7 +5,7 @@ import asyncHandler from 'express-async-handler';
 
 // Generate JWT token (only with user ID, roles are stored in DB)
 const generateToken = (id, roles) => {
-  return jwt.sign({ id, roles }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  return jwt.sign({ id, roles }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
 // Register new user
