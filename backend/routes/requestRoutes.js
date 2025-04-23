@@ -1,11 +1,5 @@
 import express from 'express';
-import {
-  createRequest,
-  getAllRequests,
-  getMyRequests,
-  acceptRequest,
-  completeRequest,
-} from '../controllers/requestController.js';
+import { createRequest, getAllRequests, getMyRequests, acceptRequest, completeRequest } from '../controllers/requestController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -16,13 +10,13 @@ router.post('/', protect, createRequest);
 // Route to get all requests (for admin/worker)
 router.get('/', protect, getAllRequests);
 
-// ✅ This is the route you're trying to access from frontend
+// Route to get my requests (for customer)
 router.get('/my', protect, getMyRequests);
 
-// Route to accept a request
+// Route to accept a request (for worker)
 router.put('/accept/:id', protect, acceptRequest);
 
-// Route to complete a request
+// Route to complete a request (for worker or customer)
 router.put('/complete/:id', protect, completeRequest);
 
 export default router;

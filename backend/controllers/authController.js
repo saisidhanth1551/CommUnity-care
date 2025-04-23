@@ -20,16 +20,17 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Ensure roles is always an array
-  const userRoles = Array.isArray(roles) ? roles : [roles || "customer"];
+  const userRoles = Array.isArray(roles) ? roles : [roles || 'customer'];
+
 
   // Create the user in the database
   const user = await User.create({
     name,
     email,
-    password, // Mongoose schema will hash this password
+    password,
     roles: userRoles,
   });
-  console.log("Registered roles:", user.roles);
+  console.log('Registered roles:', user.roles);
 
   if (user) {
     const token = generateToken(user._id, user.roles);
@@ -44,7 +45,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password, role } = req.body;
 
-  console.log("Login attempt:", email, role);
+  console.log('Login attempt:', email, role);
 
   // Check if the user exists in the database
   const user = await User.findOne({ email });
@@ -53,11 +54,13 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid credentials');
   }
 
-  console.log("User roles from DB:", user.roles);
+  console.log('User roles from DB:', user.roles);
 
   // Role validation before password validation
   if (role) {
-    const normalizedRoles = Array.isArray(user.roles) ? user.roles.map(r => r.toLowerCase()) : [];
+    const normalizedRoles = Array.isArray(user.roles)
+      ? user.roles.map(r => r.toLowerCase())
+      : [];
     const requestedRole = role.toLowerCase();
 
     if (!normalizedRoles.includes(requestedRole)) {
@@ -67,11 +70,11 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Password matching
-  const isMatch = await user.matchPassword(password);
-  console.log("Password match:", isMatch);
+  const isMatch = await bcrypt.compare(password, user.password);
+  console.log('Password match:', isMatch);
 
   if (!isMatch) {
-    console.log("Password mismatch");
+    console.log('Password mismatch');
     res.status(400);
     throw new Error('Invalid credentials');
   }

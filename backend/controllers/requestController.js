@@ -1,38 +1,41 @@
-import ServiceRequest from '../models/ServiceRequest.js'; // Import ServiceRequest model
+import ServiceRequest from '../models/ServiceRequest.js'; // Import the fresh ServiceRequest model
 
 // Function to create a new service request
 export const createRequest = async (req, res) => {
   try {
-    const { title, description, category, location } = req.body;
+    const { title, description, category, location, status } = req.body;
 
-    // Validate the fields
-    if (!title || !description || !category || !location) {
-      return res.status(400).json({ message: 'All fields are required' });
+    const formattedStatus = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Pending';
+
+    // Validate status
+    const validStatuses = ['Pending', 'Accepted', 'Completed'];
+    if (!validStatuses.includes(formattedStatus)) {
+      return res.status(400).json({ message: 'Invalid status value. Please use "Pending", "Accepted", or "Completed".' });
     }
 
-    // Create a new service request
     const newRequest = new ServiceRequest({
       title,
       description,
       category,
       location,
-      customer: req.user._id, // Attach logged-in user's ID as the customer
+      status: formattedStatus,  // Use formatted status
+      customer: req.user._id,  // Use the authenticated user's ID for customer
     });
 
-    // Save the service request
-    const savedRequest = await newRequest.save();
-    res.status(201).json(savedRequest); // Return the saved request
+    await newRequest.save();
+    res.status(201).json({ message: 'Service request created successfully', request: newRequest });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error creating service request:", error);
+    res.status(400).json({ message: error.message });
   }
 };
 
-// Function to get all service requests (for Admin/Worker)
+// Function to get all service requests
 export const getAllRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find()
-      .populate('customer', 'name email') // Populate the customer details
-      .populate('worker', 'name email'); // Optionally populate the worker details if assigned
+      .populate('customer', 'name email')
+      .populate('worker', 'name email');
     res.json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -46,13 +49,13 @@ export const getMyRequests = async (req, res) => {
       .populate('customer', 'name email')
       .populate('worker', 'name email');
 
-    res.status(200).json(requests); // Always return 200 with results (even if empty)
+    res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Function to accept a service request (by worker)
+// Function to accept a service request
 export const acceptRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -66,8 +69,7 @@ export const acceptRequest = async (req, res) => {
       return res.status(400).json({ message: 'Request already accepted' });
     }
 
-    // Assign the worker to the request
-    request.worker = req.user._id;
+    request.worker = req.user._id;  // Assign the worker
     request.status = 'Accepted';
 
     await request.save();
@@ -77,7 +79,7 @@ export const acceptRequest = async (req, res) => {
   }
 };
 
-// Function to complete a service request (by worker or customer)
+// Function to complete a service request
 export const completeRequest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -91,8 +93,7 @@ export const completeRequest = async (req, res) => {
       return res.status(400).json({ message: 'Request already completed' });
     }
 
-    // Complete the request (both customer and worker can complete)
-    request.status = 'Completed';
+    request.status = 'Completed';  // Mark request as completed
 
     await request.save();
     res.json(request);

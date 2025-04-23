@@ -1,38 +1,23 @@
 // backend/models/ServiceRequest.js
 import mongoose from 'mongoose';
 
-const serviceRequestSchema = new mongoose.Schema(
+const serviceRequestSchema = mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide a title for the request'],
+      required: true,
     },
     description: {
       type: String,
-      required: [true, 'Please provide a description'],
+      required: true,
     },
     category: {
       type: String,
-      enum: [
-        'Electrical',
-        'Gas',
-        'Medical',
-        'Hospitality',
-        'Plumbing',
-        'Cleaning',
-        'IT Support',
-        'Carpentry',
-        'Appliance Repair',
-        'Gardening',
-        'Moving Help',
-        'Groceries',
-        'Other'
-      ],
-      required: [true, 'Please select a category'],
+      required: true,
     },
     location: {
       type: String,
-      required: [true, 'Please provide a location'],
+      required: true,
     },
     status: {
       type: String,
@@ -41,7 +26,7 @@ const serviceRequestSchema = new mongoose.Schema(
     },
     customer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'User',  // Assuming 'User' is your user model
       required: true,
     },
     worker: {
@@ -51,10 +36,10 @@ const serviceRequestSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Will create createdAt and updatedAt fields
   }
 );
 
 const ServiceRequest = mongoose.model('ServiceRequest', serviceRequestSchema);
 
-export default ServiceRequest; // Export using ES Module syntax
+export default ServiceRequest;
