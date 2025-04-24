@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js'; // Import authentication routes
 import requestRoutes from './routes/requestRoutes.js'; // Import service request routes
+import userRoutes from './routes/userRoutes.js'; // Import user routes
+import ratingRoutes from './routes/ratingRoutes.js'; // Import rating routes
 import connectDB from './config/db.js'; // DB connection file
 import { errorHandler } from './middleware/errorMiddleware.js'; // Custom error handling middleware
 import { protect } from './middleware/authMiddleware.js'; // Import protect middleware for authenticated routes
@@ -12,6 +14,11 @@ dotenv.config(); // Load environment variables
 // Initialize Express app
 const app = express();
 
+// Middleware for CORS and JSON parsing
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON requests
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded requests
+
 // Test route to verify the server is running
 app.get("/", (req, res) => {
   res.send("Welcome to CommUnity Care API");
@@ -20,14 +27,11 @@ app.get("/", (req, res) => {
 // Connect to MongoDB database
 connectDB();
 
-// Middleware for CORS and JSON parsing
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse JSON requests
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded requests
-
 // Routes
 app.use('/api/auth', authRoutes); // Authentication routes
-app.use('/api/requests', protect, requestRoutes); // Service request routes protected by JWT
+app.use('/api/requests', requestRoutes); // Service request routes
+app.use('/api/users', userRoutes); // User routes
+app.use('/api/ratings', ratingRoutes); // Rating routes
 
 // Error handling middleware
 app.use(errorHandler);

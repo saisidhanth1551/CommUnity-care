@@ -15,8 +15,11 @@ const protect = asyncHandler(async (req, res, next) => {
       // Get token from header
       token = req.headers.authorization.split(' ')[1];
 
+      // Add fallback JWT secret - must match the one in authController.js
+      const jwtSecret = process.env.JWT_SECRET || 'CommUnityCare_JWT_Secret_Key_2024_secure_random_string';
+      
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, jwtSecret);
 
       // Attach user to request, excluding the password
       req.user = await User.findById(decoded.id).select('-password');
@@ -24,6 +27,11 @@ const protect = asyncHandler(async (req, res, next) => {
       if (!req.user) {
         res.status(401);
         throw new Error('User not found for this token');
+      }
+
+      // Add roles from the token to the request if they exist
+      if (decoded.roles) {
+        req.userRoles = decoded.roles;
       }
 
       next(); // Proceed to next middleware or controller
@@ -38,4 +46,44 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { protect };
+// Middleware to check if user has specific role
+const hasRole = (role) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Not authenticated');
+    }
+
+    const userRoles = req.user.roles || [];
+    
+    if (!userRoles.includes(role)) {
+      res.status(403);
+      throw new Error(`Access denied. Role '${role}' required.`);
+    }
+    
+    next();
+  };
+};
+
+// Middleware to check if user has any of the specified roles
+const hasAnyRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Not authenticated');
+    }
+
+    const userRoles = req.user.roles || [];
+    
+    const hasPermission = roles.some(role => userRoles.includes(role));
+    
+    if (!hasPermission) {
+      res.status(403);
+      throw new Error(`Access denied. One of roles [${roles.join(', ')}] required.`);
+    }
+    
+    next();
+  };
+};
+
+export { protect, hasRole, hasAnyRole };

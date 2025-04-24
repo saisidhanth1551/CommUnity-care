@@ -21,7 +21,7 @@ const serviceRequestSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Accepted', 'Completed'],
+      enum: ['Pending', 'Assigned', 'Accepted', 'Completed', 'Rejected'],
       default: 'Pending',
     },
     customer: {
@@ -34,6 +34,29 @@ const serviceRequestSchema = mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    isWorkerConfirmed: {
+      type: Boolean,
+      default: false,
+    },
+    rejectionMessage: {
+      type: String,
+      default: null,
+    },
+    // Worker rating fields
+    workerRating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+    },
+    workerFeedback: {
+      type: String,
+      default: null,
+    },
+    isRated: {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true, // Will create createdAt and updatedAt fields
