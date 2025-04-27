@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { UserPlus, Star, Phone, Mail, AlertCircle, Loader2, Search, Award, FileCheck } from 'lucide-react';
 
-const WorkerSelection = ({ category, onWorkerSelect, selectedWorkerId }) => {
+const WorkerSelection = ({ category, onSelect, selectedWorkerId }) => {
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,7 +96,7 @@ const WorkerSelection = ({ category, onWorkerSelect, selectedWorkerId }) => {
         </h3>
         {selectedWorkerId && (
           <button 
-            onClick={() => onWorkerSelect(null)}
+            onClick={() => onSelect(null)}
             className="text-sm text-red-600 hover:text-red-800 flex items-center"
           >
             <AlertCircle size={14} className="mr-1" />
@@ -117,7 +117,7 @@ const WorkerSelection = ({ category, onWorkerSelect, selectedWorkerId }) => {
           return (
             <div 
               key={worker._id}
-              onClick={() => onWorkerSelect(worker._id)}
+              onClick={() => onSelect(worker._id)}
               className={`border p-5 rounded-xl cursor-pointer transition-all ${
                 isSelected 
                   ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200' 

@@ -5,6 +5,8 @@ import { toast, Toaster } from "react-hot-toast";
 import { User, Upload, Mail, Phone, Save, Edit, X, Briefcase } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { PageTransition, AnimatedButton } from "../components/AnimatedComponents";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -227,346 +229,348 @@ const Profile = () => {
 
   if (loading && !user) {
     return (
-      <>
+      <PageTransition>
         <Navbar />
         <div className="text-center mt-10 text-lg">Loading profile...</div>
-      </>
+      </PageTransition>
     );
   }
 
   if (error && !user) {
     return (
-      <>
+      <PageTransition>
         <Navbar />
         <div className="text-center mt-10 text-lg text-red-500">{error}</div>
-      </>
+      </PageTransition>
     );
   }
 
   return (
-    <>
+    <PageTransition>
       <Navbar />
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-10 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-center text-blue-900 mb-8">
-            Your Profile
-          </h1>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-800">Profile Information</h2>
-              {!isEditing ? (
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  <Edit size={18} />
-                  Edit Profile
-                </button>
-              ) : (
-                <button 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormData({
-                      name: user.name || "",
-                      email: user.email || "",
-                      phoneNumber: user.phoneNumber || "",
-                      categories: user.categories || [],
-                      roles: user.roles || ["customer"]
-                    });
-                    setImagePreview(null);
-                    setProfileImage(null);
-                  }}
-                  className="flex items-center gap-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
-                >
-                  <X size={18} />
-                  Cancel
-                </button>
-              )}
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <section className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-10 px-4">
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-3xl font-bold text-center text-blue-900 mb-8">
+              Your Profile
+            </h1>
             
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Profile Image */}
-              <div className="flex flex-col items-center">
-                <div className="w-40 h-40 rounded-full overflow-hidden mb-4 border-4 border-blue-100">
-                  {user.profilePicture || imagePreview ? (
-                    <img 
-                      src={imagePreview || (user.profilePicture ? `http://localhost:5000${user.profilePicture}` : '')} 
-                      alt={user.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-blue-100 flex items-center justify-center">
-                      <User size={64} className="text-blue-500" />
-                    </div>
-                  )}
-                </div>
-                
-                {isEditing && (
-                  <div className="mb-4 w-full space-y-2">
-                    <label htmlFor="profileImage" className="cursor-pointer flex items-center justify-center gap-2 bg-blue-50 text-blue-700 p-2 rounded-lg hover:bg-blue-100 transition">
-                      <Upload size={16} />
-                      Upload Photo
-                    </label>
-                    <input 
-                      type="file" 
-                      id="profileImage" 
-                      accept="image/*" 
-                      onChange={handleImageChange} 
-                      className="hidden"
-                    />
-                    
-                    {(user.profilePicture || imagePreview) && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveProfilePicture}
-                        disabled={removingPhoto}
-                        className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-700 p-2 rounded-lg hover:bg-red-100 transition"
-                      >
-                        <X size={16} />
-                        {removingPhoto ? "Removing..." : "Remove Photo"}
-                      </button>
-                    )}
-                  </div>
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Profile Information</h2>
+                {!isEditing ? (
+                  <button 
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  >
+                    <Edit size={18} />
+                    Edit Profile
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setIsEditing(false);
+                      setFormData({
+                        name: user.name || "",
+                        email: user.email || "",
+                        phoneNumber: user.phoneNumber || "",
+                        categories: user.categories || [],
+                        roles: user.roles || ["customer"]
+                      });
+                      setImagePreview(null);
+                      setProfileImage(null);
+                    }}
+                    className="flex items-center gap-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                  >
+                    <X size={18} />
+                    Cancel
+                  </button>
                 )}
-                
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold">{user.name}</h3>
-                  <p className="text-blue-600">
-                    {user.roles && user.roles.map(role => 
-                      role.charAt(0).toUpperCase() + role.slice(1)
-                    ).join(', ')}
-                  </p>
-                  {user.rating > 0 && (
-                    <div className="flex items-center justify-center mt-2">
-                      <div className="bg-yellow-50 px-3 py-1 rounded-full flex items-center gap-1">
-                        <span className="text-yellow-600">★</span>
-                        <span className="font-medium text-yellow-700">{user.rating.toFixed(1)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
               
-              {/* Profile Details */}
-              <div className="flex-1">
-                {isEditing ? (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                        required
+              <div className="flex flex-col md:flex-row gap-8">
+                {/* Profile Image */}
+                <div className="flex flex-col items-center">
+                  <div className="w-40 h-40 rounded-full overflow-hidden mb-4 border-4 border-blue-100">
+                    {user.profilePicture || imagePreview ? (
+                      <img 
+                        src={imagePreview || (user.profilePicture ? `http://localhost:5000${user.profilePicture}` : '')} 
+                        alt={user.name} 
+                        className="w-full h-full object-cover"
                       />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        name="phoneNumber"
-                        value={formData.phoneNumber}
-                        onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Your Roles
-                      </label>
-                      <div className="flex space-x-3">
-                        <button
-                          type="button"
-                          onClick={() => handleRoleToggle('customer')}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            formData.roles.includes('customer')
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <User size={18} />
-                          Customer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRoleToggle('worker')}
-                          className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                            formData.roles.includes('worker')
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <Briefcase size={18} />
-                          Worker
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {formData.roles.includes('worker') ? 
-                          "As a worker, you'll be able to accept service requests in your selected categories." : 
-                          "Switch to worker role to offer services to the community."}
-                      </p>
-                    </div>
-                    
-                    {/* Only show categories selection if worker role is selected */}
-                    {formData.roles.includes('worker') && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Service Categories
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {availableCategories.map(category => (
-                            <button
-                              key={category}
-                              type="button"
-                              onClick={() => handleCategoryChange(category)}
-                              className={`px-3 py-1 rounded-full text-sm ${
-                                formData.categories.includes(category)
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                              }`}
-                            >
-                              {category}
-                            </button>
-                          ))}
-                        </div>
+                    ) : (
+                      <div className="w-full h-full bg-blue-100 flex items-center justify-center">
+                        <User size={64} className="text-blue-500" />
                       </div>
                     )}
-                    
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                      >
-                        {loading ? 'Updating...' : (
-                          <>
-                            <Save size={18} />
-                            Save Changes
-                          </>
-                        )}
-                      </button>
+                  </div>
+                  
+                  {isEditing && (
+                    <div className="mb-4 w-full space-y-2">
+                      <label htmlFor="profileImage" className="cursor-pointer flex items-center justify-center gap-2 bg-blue-50 text-blue-700 p-2 rounded-lg hover:bg-blue-100 transition">
+                        <Upload size={16} />
+                        Upload Photo
+                      </label>
+                      <input 
+                        type="file" 
+                        id="profileImage" 
+                        accept="image/*" 
+                        onChange={handleImageChange} 
+                        className="hidden"
+                      />
+                      
+                      {(user.profilePicture || imagePreview) && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveProfilePicture}
+                          disabled={removingPhoto}
+                          className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-700 p-2 rounded-lg hover:bg-red-100 transition"
+                        >
+                          <X size={16} />
+                          {removingPhoto ? "Removing..." : "Remove Photo"}
+                        </button>
+                      )}
                     </div>
-                  </form>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        <User size={16} className="text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm text-gray-500">Full Name</h4>
-                        <p className="text-gray-800 font-medium">{user.name}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        <Mail size={16} className="text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm text-gray-500">Email Address</h4>
-                        <p className="text-gray-800 font-medium">{user.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        <Phone size={16} className="text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm text-gray-500">Phone Number</h4>
-                        <p className="text-gray-800 font-medium">{user.phoneNumber || 'Not provided'}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                        <Briefcase size={16} className="text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm text-gray-500">Roles</h4>
-                        <div className="flex gap-2 mt-1">
-                          {user.roles && user.roles.map(role => (
-                            <span
-                              key={role}
-                              className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm capitalize"
-                            >
-                              {role}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {user.roles && user.roles.includes('worker') && user.categories && user.categories.length > 0 && (
-                      <div className="mt-6">
-                        <h4 className="text-sm text-gray-500 mb-2">Service Categories</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {user.categories.map(category => (
-                            <span
-                              key={category}
-                              className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
-                            >
-                              {category}
-                            </span>
-                          ))}
+                  )}
+                  
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold">{user.name}</h3>
+                    <p className="text-blue-600">
+                      {user.roles && user.roles.map(role => 
+                        role.charAt(0).toUpperCase() + role.slice(1)
+                      ).join(', ')}
+                    </p>
+                    {user.rating > 0 && (
+                      <div className="flex items-center justify-center mt-2">
+                        <div className="bg-yellow-50 px-3 py-1 rounded-full flex items-center gap-1">
+                          <span className="text-yellow-600">★</span>
+                          <span className="font-medium text-yellow-700">{user.rating.toFixed(1)}</span>
                         </div>
                       </div>
                     )}
                   </div>
-                )}
+                </div>
+                
+                {/* Profile Details */}
+                <div className="flex-1">
+                  {isEditing ? (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          value={formData.phoneNumber}
+                          onChange={handleChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Your Roles
+                        </label>
+                        <div className="flex space-x-3">
+                          <button
+                            type="button"
+                            onClick={() => handleRoleToggle('customer')}
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                              formData.roles.includes('customer')
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <User size={18} />
+                            Customer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRoleToggle('worker')}
+                            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                              formData.roles.includes('worker')
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            <Briefcase size={18} />
+                            Worker
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {formData.roles.includes('worker') ? 
+                            "As a worker, you'll be able to accept service requests in your selected categories." : 
+                            "Switch to worker role to offer services to the community."}
+                        </p>
+                      </div>
+                      
+                      {/* Only show categories selection if worker role is selected */}
+                      {formData.roles.includes('worker') && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Service Categories
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {availableCategories.map(category => (
+                              <button
+                                key={category}
+                                type="button"
+                                onClick={() => handleCategoryChange(category)}
+                                className={`px-3 py-1 rounded-full text-sm ${
+                                  formData.categories.includes(category)
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {category}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                        >
+                          {loading ? 'Updating...' : (
+                            <>
+                              <Save size={18} />
+                              Save Changes
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <User size={16} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-gray-500">Full Name</h4>
+                          <p className="text-gray-800 font-medium">{user.name}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <Mail size={16} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-gray-500">Email Address</h4>
+                          <p className="text-gray-800 font-medium">{user.email}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <Phone size={16} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-gray-500">Phone Number</h4>
+                          <p className="text-gray-800 font-medium">{user.phoneNumber || 'Not provided'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <Briefcase size={16} className="text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-gray-500">Roles</h4>
+                          <div className="flex gap-2 mt-1">
+                            {user.roles && user.roles.map(role => (
+                              <span
+                                key={role}
+                                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm capitalize"
+                              >
+                                {role}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {user.roles && user.roles.includes('worker') && user.categories && user.categories.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-sm text-gray-500 mb-2">Service Categories</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {user.categories.map(category => (
+                              <span
+                                key={category}
+                                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                              >
+                                {category}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          
-          {/* Delete Account Section */}
-          <div className="mt-10 bg-white rounded-2xl shadow-lg p-6 md:p-8 border-t-4 border-red-500">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Danger Zone</h2>
-            <p className="text-gray-600 mb-6">
-              Deleting your account is permanent. All your data will be permanently removed, including your profile, requests, and ratings. This action cannot be undone.
-            </p>
             
-            <button
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg flex items-center gap-2"
-            >
-              {isDeleting ? (
-                <>Loading...</>
-              ) : (
-                <>Delete Account</>
-              )}
-            </button>
+            {/* Delete Account Section */}
+            <div className="mt-10 bg-white rounded-2xl shadow-lg p-6 md:p-8 border-t-4 border-red-500">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Danger Zone</h2>
+              <p className="text-gray-600 mb-6">
+                Deleting your account is permanent. All your data will be permanently removed, including your profile, requests, and ratings. This action cannot be undone.
+              </p>
+              
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>Loading...</>
+                ) : (
+                  <>Delete Account</>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
-    </>
+        </section>
+      </div>
+    </PageTransition>
   );
 };
 

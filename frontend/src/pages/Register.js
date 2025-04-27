@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import axiosInstance from '../api/axiosInstance';
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { PageTransition, AnimatedButton } from "../components/AnimatedComponents";
+import { UserPlus, Mail, Lock, Briefcase, Phone, User, AlertCircle, Loader2 } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -151,156 +154,261 @@ const Register = () => {
     }
   };
 
+  // Animation variants for staggered form fields
+  const formVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 }
+  };
+
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-900">Register</h2>
-        
-        {apiError && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {apiError}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          {/* Full Name Input */}
-          <div className="mb-4">
-            <label htmlFor="name" className="block text-gray-700">Full Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded"
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          </div>
-
-          {/* Email Input */}
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded"
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-          </div>
-
-          {/* Phone Input */}
-          <div className="mb-4">
-            <label htmlFor="phoneNumber" className="block text-gray-700">Phone Number</label>
-            <input
-              type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded"
-              placeholder="10 digits, no spaces or dashes"
-            />
-            {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
-          </div>
-
-          {/* Password Input */}
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-gray-700">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded"
-            />
-            {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-          </div>
-
-          {/* Confirm Password Input */}
-          <div className="mb-4">
-            <label htmlFor="confirmPassword" className="block text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded"
-            />
-            {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
-          </div>
-
-          {/* Role Selection */}
-          <div className="mb-4">
-            <label className="block text-gray-700">Register As</label>
-            <div className="flex gap-4">
-              <label>
-                <input
-                  type="checkbox"
-                  name="role"
-                  value="customer"
-                  checked={formData.roles.includes("customer")}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Customer
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="role"
-                  value="worker"
-                  checked={formData.roles.includes("worker")}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Worker
-              </label>
-            </div>
-          </div>
-
-          {/* Categories Selection - Only show if worker role is selected */}
-          {formData.roles.includes("worker") && (
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Select Service Categories</label>
-              <div className="grid grid-cols-2 gap-2">
-                {availableCategories.map((category) => (
-                  <label key={category} className="flex items-start">
-                    <input
-                      type="checkbox"
-                      name="category"
-                      value={category}
-                      checked={formData.categories.includes(category)}
-                      onChange={handleChange}
-                      className="mr-2 mt-1"
-                    />
-                    <span>{category}</span>
-                  </label>
-                ))}
-              </div>
-              {errors.categories && <p className="text-red-500 text-sm mt-1">{errors.categories}</p>}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded"
+    <PageTransition>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br">
+        <motion.div 
+          className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ 
+            duration: 0.5,
+            type: "spring",
+            stiffness: 120,
+            damping: 15
+          }}
+        >
+          <motion.div
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-center mb-6"
           >
-            {loading ? "Registering..." : "Register"}
-          </button>
+            <UserPlus size={40} className="mx-auto text-blue-900 mb-2" />
+            <h2 className="text-2xl font-bold text-blue-900">Register</h2>
+          </motion.div>
           
-          <div className="mt-4 text-center">
-            <p className="text-gray-600">
+          {apiError && (
+            <motion.div 
+              className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded flex items-center"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.3 }}
+            >
+              <AlertCircle size={18} className="mr-2 text-red-600" />
+              {apiError}
+            </motion.div>
+          )}
+          
+          <motion.form 
+            onSubmit={handleSubmit}
+            variants={formVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Full Name Input */}
+            <motion.div className="mb-4" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Full Name"
+                />
+              </div>
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </motion.div>
+
+            {/* Email Input */}
+            <motion.div className="mb-4" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Email Address"
+                />
+              </div>
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </motion.div>
+
+            {/* Phone Input */}
+            <motion.div className="mb-4" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Phone Number (10 digits)"
+                />
+              </div>
+              {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>}
+            </motion.div>
+            
+            {/* Password Fields */}
+            <motion.div className="mb-4" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Password (min. 8 characters)"
+                />
+              </div>
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            </motion.div>
+            
+            <motion.div className="mb-5" variants={itemVariants}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Confirm Password"
+                />
+              </div>
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            </motion.div>
+
+            {/* Role Selection */}
+            <motion.div className="mb-5" variants={itemVariants}>
+              <label className="text-gray-700 font-semibold mb-2 flex items-center">
+                <Briefcase size={18} className="mr-2 text-blue-900" />
+                User Role
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="customer-role"
+                    name="role"
+                    value="customer"
+                    checked={formData.roles.includes("customer")}
+                    onChange={handleChange}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                  />
+                  <label htmlFor="customer-role" className="text-gray-700">Customer (request services)</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="worker-role"
+                    name="role"
+                    value="worker"
+                    checked={formData.roles.includes("worker")}
+                    onChange={handleChange}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                  />
+                  <label htmlFor="worker-role" className="text-gray-700">Worker (provide services)</label>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Service Categories (for workers) */}
+            {formData.roles.includes("worker") && (
+              <motion.div 
+                className="mb-6 bg-blue-50 p-5 rounded-lg border border-blue-100"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                transition={{ duration: 0.4 }}
+              >
+                <h3 className="font-semibold text-blue-900 mb-3">Select Service Categories:</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {availableCategories.map((category) => (
+                    <div key={category} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`category-${category}`}
+                        name="category"
+                        value={category}
+                        checked={formData.categories.includes(category)}
+                        onChange={handleChange}
+                        className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                      />
+                      <label htmlFor={`category-${category}`} className="text-sm text-gray-700">
+                        {category}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {errors.categories && (
+                  <p className="text-red-500 text-sm mt-2">{errors.categories}</p>
+                )}
+              </motion.div>
+            )}
+
+            {/* Submit Button */}
+            <motion.div 
+              variants={itemVariants}
+              className="mt-6"
+            >
+              <AnimatedButton
+                type="submit"
+                className={`w-full py-3 ${
+                  loading ? "bg-gray-400" : "bg-blue-900 hover:bg-blue-800"
+                } text-white rounded-lg shadow-md transition-colors duration-200`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                    Registering...
+                  </div>
+                ) : (
+                  "Create Account"
+                )}
+              </AnimatedButton>
+            </motion.div>
+            
+            <motion.div 
+              className="mt-5 text-center text-sm text-gray-600"
+              variants={itemVariants}
+            >
               Already have an account?{" "}
-              <a href="/login" className="text-blue-700 hover:underline">
-                Login
-              </a>
-            </p>
-          </div>
-        </form>
+              <motion.a 
+                href="/login" 
+                className="text-blue-600 hover:underline font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Log in here
+              </motion.a>
+            </motion.div>
+          </motion.form>
+        </motion.div>
       </div>
-    </div>
+    </PageTransition>
   );
 };
 

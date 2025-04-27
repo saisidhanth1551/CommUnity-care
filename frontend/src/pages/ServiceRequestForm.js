@@ -9,68 +9,85 @@ import {
   ServerCog, Hammer, Plug, Leaf, ShoppingCart,
   Truck, Scissors, Home, Info, Phone, LogOut
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { PageTransition, AnimatedButton } from "../components/AnimatedComponents";
 
-// Navbar Component
+// Navbar Component with animations
 const Navbar = () => {
   // Detect current path
   const currentPath = window.location.pathname;
   
   return (
-    <nav className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
+    <motion.nav 
+      className="bg-white shadow-md py-4 px-8 flex justify-between items-center"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 120, damping: 20 }}
+    >
       <div className="flex items-center space-x-3">
-        <img
+        <motion.img
           src="/assets/CommUnity-care.jpg"
           alt="CommUnity Care Logo"
           className="w-16 h-16 rounded-full object-cover"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 10 }}
         />
         <span className="text-2xl font-bold text-blue-900">CommUnity Care</span>
       </div>
       <div className="flex items-center space-x-6 text-sm font-medium">
-        <a 
+        <motion.a 
           href="/" 
           className={`inline-flex items-center ${
             currentPath === "/" 
               ? "text-blue-600 font-semibold" 
               : "text-blue-800 hover:text-blue-600"
           }`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Home size={16} className="mr-1" />
           Home
-        </a>
-        <a 
+        </motion.a>
+        <motion.a 
           href="/about" 
           className={`inline-flex items-center ${
             currentPath === "/about" 
               ? "text-blue-600 font-semibold" 
               : "text-blue-800 hover:text-blue-600"
           }`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Info size={16} className="mr-1" />
           About
-        </a>
-        <a 
+        </motion.a>
+        <motion.a 
           href="/contact" 
           className={`inline-flex items-center ${
             currentPath === "/contact" 
               ? "text-blue-600 font-semibold" 
               : "text-blue-800 hover:text-blue-600"
           }`}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Phone size={16} className="mr-1" />
           Contact
-        </a>
-        <button
+        </motion.a>
+        <motion.button
           onClick={() => {
             localStorage.removeItem("authToken");
             window.location.href = "/login";
           }}
           className="text-red-600 hover:text-red-700 inline-flex items-center ml-4"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <LogOut size={16} className="mr-1" />
           Logout
-        </button>
+        </motion.button>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 
@@ -86,8 +103,8 @@ const ServiceRequestForm = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showWorkerSelection, setShowWorkerSelection] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate(); // Hook for redirection after form submission
 
   const handleChange = (e) => {
@@ -102,10 +119,18 @@ const ServiceRequestForm = () => {
 
   const handleWorkerSelect = (workerId) => {
     setFormData(prev => ({ ...prev, workerId }));
+    console.log("Worker selected:", workerId);
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    
+    // Validate required fields for final submission
+    if (!formData.title || !formData.category || !formData.location || !formData.description) {
+      setError("Please fill out all required fields before submitting.");
+      return;
+    }
+    
     setLoading(true);
     setError(""); // Clear previous error message if any
 
@@ -117,9 +142,17 @@ const ServiceRequestForm = () => {
     }
 
     try {
+      // Create a copy of formData to submit
+      // If workerId is null, it will be handled by the backend to find any available worker
+      const dataToSubmit = {
+        ...formData
+      };
+      
+      console.log("Submitting request with data:", dataToSubmit);
+      
       const response = await axiosInstance.post(
-        "/requests", // Use endpoint path only as axiosInstance has baseURL
-        formData,
+        "/requests",
+        dataToSubmit,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -136,17 +169,34 @@ const ServiceRequestForm = () => {
         }, 1500);
       }
     } catch (err) {
+      console.error("Form submission error:", err);
       setError(
         err.response?.data?.message ||
           "Failed to create service request. Please try again."
       );
-    } finally {
       setLoading(false);
     }
   };
 
   const handleBackToDashboard = () => {
     navigate("/customer-dashboard");
+  };
+  
+  const nextStep = () => {
+    if (currentStep === 1 && (!formData.title || !formData.category || !formData.location)) {
+      setError("Please fill out all required fields before proceeding.");
+      return;
+    }
+    if (currentStep === 2 && !formData.description) {
+      setError("Please provide a description of your service request.");
+      return;
+    }
+    setError("");
+    setCurrentStep(current => current + 1);
+  };
+  
+  const prevStep = () => {
+    setCurrentStep(current => current - 1);
   };
 
   const getCategoryIcon = (category) => {
@@ -169,212 +219,291 @@ const ServiceRequestForm = () => {
     return icons[category] || <ListFilter size={18} className="text-blue-600" />;
   };
 
+  // Progress indicator component
+  const ProgressIndicator = () => {
+    return (
+      <div className="flex items-center justify-center mb-8">
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <motion.div 
+              className={`rounded-full h-10 w-10 flex items-center justify-center ${
+                step === currentStep 
+                  ? "bg-blue-600 text-white" 
+                  : step < currentStep 
+                    ? "bg-green-500 text-white" 
+                    : "bg-gray-200 text-gray-600"
+              }`}
+              whileHover={{ scale: 1.1 }}
+              animate={{ scale: step === currentStep ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: step === currentStep ? Infinity : 0, repeatType: "reverse" }}
+            >
+              {step < currentStep ? <CheckCircle size={18} /> : step}
+            </motion.div>
+            {step < 3 && (
+              <motion.div 
+                className={`h-1 w-16 ${
+                  step < currentStep ? "bg-green-500" : "bg-gray-200"
+                }`}
+                initial={{ width: 0 }}
+                animate={{ width: "4rem" }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+              />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <>
+    <PageTransition>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-10">
         <div className="max-w-4xl mx-auto px-6">
-          <button 
+          <motion.button 
             onClick={handleBackToDashboard}
             className="flex items-center text-blue-700 hover:text-blue-900 mb-6 transition-colors"
+            whileHover={{ x: -5 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ArrowLeft size={18} className="mr-1" />
             Back to Dashboard
-          </button>
+          </motion.button>
           
-          <h1 className="text-4xl font-bold mb-3 text-blue-900 text-center">Create a Service Request</h1>
-          <p className="text-gray-600 mb-8 text-center">
+          <motion.h1 
+            className="text-4xl font-bold mb-3 text-blue-900 text-center"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Create a Service Request
+          </motion.h1>
+          <motion.p 
+            className="text-gray-600 mb-8 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             Provide the details of your service request below and we'll connect you with the right professionals.
-          </p>
+          </motion.p>
+          
+          <ProgressIndicator />
           
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+            <motion.div 
+              className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className="flex items-center">
                 <AlertCircle size={20} className="text-red-500 mr-2" />
                 <p className="text-red-700">{error}</p>
               </div>
-            </div>
+            </motion.div>
           )}
           
           {success && (
-            <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+            <motion.div 
+              className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className="flex items-center">
                 <CheckCircle size={20} className="text-green-500 mr-2" />
-                <p className="text-green-700">Request created successfully! Redirecting...</p>
+                <p className="text-green-700">Your service request has been created successfully! Redirecting...</p>
+              </div>
+            </motion.div>
+          )}
+          
+          <motion.div 
+            className="bg-white rounded-xl shadow-lg p-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div>
+              {/* Step 1: Basic Information */}
+              {currentStep === 1 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-2xl font-semibold mb-6 text-blue-800">Step 1: Basic Information</h2>
+                  
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2" htmlFor="title">
+                      Request Title <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center">
+                      <Clipboard size={20} className="text-gray-400 mr-2" />
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Fix Leaking Bathroom Sink"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label className="block text-gray-700 font-medium mb-2" htmlFor="category">
+                      Service Category <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      >
+                        <option value="Electrical">Electrical</option>
+                        <option value="Gas">Gas</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Cleaning">Cleaning</option>
+                        <option value="IT Support">IT Support</option>
+                        <option value="Carpentry">Carpentry</option>
+                        <option value="Appliance Repair">Appliance Repair</option>
+                        <option value="Gardening">Gardening</option>
+                        <option value="Moving Help">Moving Help</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Medical">Medical</option>
+                        <option value="Hospitality">Hospitality</option>
+                        <option value="Tailoring">Tailoring</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        {getCategoryIcon(formData.category)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-8">
+                    <label className="block text-gray-700 font-medium mb-2" htmlFor="location">
+                      Location <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center">
+                      <MapPin size={20} className="text-gray-400 mr-2" />
+                      <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 123 Main St, Apartment 4B"
+                        required
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Step 2: Detailed Description */}
+              {currentStep === 2 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-2xl font-semibold mb-6 text-blue-800">Step 2: Detailed Description</h2>
+                  
+                  <div className="mb-8">
+                    <label className="block text-gray-700 font-medium mb-2" htmlFor="description">
+                      Description <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex">
+                      <MessageSquare size={20} className="text-gray-400 mr-2 mt-3" />
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Please provide details about your service request. The more information you provide, the better we can match you with the right professional."
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Step 3: Worker Selection */}
+              {currentStep === 3 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-2xl font-semibold mb-6 text-blue-800">Step 3: Choose a Worker (Optional)</h2>
+                  
+                  <div className="mb-6">
+                    <p className="text-gray-600 mb-4">
+                      You can select a specific worker for your service request or leave unselected to let our system match you with an available professional.
+                    </p>
+                    
+                    <WorkerSelection 
+                      category={formData.category}
+                      onSelect={handleWorkerSelect}
+                      selectedWorkerId={formData.workerId}
+                    />
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-8">
+                {currentStep > 1 ? (
+                  <AnimatedButton
+                    className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300"
+                    onClick={prevStep}
+                  >
+                    Previous
+                  </AnimatedButton>
+                ) : (
+                  <div></div> // Empty div for spacing
+                )}
+                
+                {currentStep < 3 ? (
+                  <AnimatedButton
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                    onClick={nextStep}
+                  >
+                    Next
+                  </AnimatedButton>
+                ) : (
+                  <AnimatedButton
+                    className={`px-6 py-2 rounded-lg text-white ${loading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                    onClick={handleSubmit}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center">
+                        <Loader2 size={20} className="animate-spin mr-2" />
+                        Submitting...
+                      </div>
+                    ) : (
+                      "Submit Request"
+                    )}
+                  </AnimatedButton>
+                )}
               </div>
             </div>
-          )}
-
-          <div className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title field */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  <div className="flex items-center">
-                    <Clipboard size={18} className="mr-2 text-blue-600" />
-                    Request Title
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="E.g., Fix leaking faucet, Computer setup assistance"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
-              
-              {/* Category field */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  <div className="flex items-center">
-                    <ListFilter size={18} className="mr-2 text-blue-600" />
-                    Service Category
-                  </div>
-                </label>
-                <div className="relative">
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-10"
-                  >
-                    <option value="Electrical">Electrical</option>
-                    <option value="Gas">Gas</option>
-                    <option value="Medical">Medical</option>
-                    <option value="Hospitality">Hospitality</option>
-                    <option value="Plumbing">Plumbing</option>
-                    <option value="Cleaning">Cleaning</option>
-                    <option value="IT Support">IT Support</option>
-                    <option value="Carpentry">Carpentry</option>
-                    <option value="Appliance Repair">Appliance Repair</option>
-                    <option value="Gardening">Gardening</option>
-                    <option value="Moving Help">Moving Help</option>
-                    <option value="Groceries">Groceries</option>
-                    <option value="Tailoring">Tailoring</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    {getCategoryIcon(formData.category)}
-                  </div>
-                </div>
-                
-                {/* Category Badge */}
-                <div className="mt-2 flex">
-                  <span className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-800">
-                    {getCategoryIcon(formData.category)}
-                    <span>{formData.category}</span>
-                  </span>
-                </div>
-              </div>
-              
-              {/* Description field */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  <div className="flex items-center">
-                    <MessageSquare size={18} className="mr-2 text-blue-600" />
-                    Description
-                  </div>
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Please provide detailed information about your service request..."
-                  className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Include any specific requirements, issues, or details that will help the worker understand your needs.
-                </p>
-              </div>
-
-              {/* Location field */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  <div className="flex items-center">
-                    <MapPin size={18} className="mr-2 text-blue-600" />
-                    Location
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="E.g., 123 Main St, Apartment 4B"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Provide your full address where the service is needed.
-                </p>
-              </div>
-
-              {/* Status is hidden from user */}
-              <input type="hidden" name="status" value={formData.status} />
-
-              {/* Worker selection toggle */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-sm">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="choose-worker"
-                    checked={showWorkerSelection}
-                    onChange={() => setShowWorkerSelection(!showWorkerSelection)}
-                    className="rounded text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="choose-worker" className="text-blue-800 font-medium">
-                    Select a specific worker for this request
-                  </label>
-                </div>
-                <p className="text-xs text-blue-700 mt-1 ml-6">
-                  If you've worked with someone before or have a preference, you can request them specifically.
-                </p>
-              </div>
-
-              {/* Worker selection component */}
-              {showWorkerSelection && (
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <WorkerSelection
-                    category={formData.category}
-                    onWorkerSelect={handleWorkerSelect}
-                    selectedWorkerId={formData.workerId}
-                  />
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <div className="pt-6 text-center">
-                <button
-                  type="submit"
-                  className={`w-full max-w-md mx-auto ${
-                    loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-                  } text-white py-3 px-6 rounded-lg flex items-center justify-center transition-colors font-medium shadow-md`}
-                  disabled={loading || success}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 size={20} className="mr-2 animate-spin" />
-                      Creating Request...
-                    </>
-                  ) : success ? (
-                    <>
-                      <CheckCircle size={20} className="mr-2" />
-                      Request Created
-                    </>
-                  ) : (
-                    "Submit Service Request"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </>
+    </PageTransition>
   );
 };
 

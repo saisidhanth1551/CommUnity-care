@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from '../api/axiosInstance';
 import { useNavigate, useLocation } from "react-router-dom";
 import {jwtDecode} from "jwt-decode";
+import { motion } from "framer-motion";
+import { PageTransition, AnimatedButton } from "../components/AnimatedComponents";
+import { LogIn, Mail, Lock, UserCheck } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -89,76 +92,159 @@ const Login = () => {
   };
   
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">Login</h2>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            {successMessage}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
-              required
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
-              required
-            />
-          </div>
-
-          {/* Role Selection */}
-          <div>
-            <label className="block text-gray-700 font-semibold mb-1">Select Role</label>
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
-            >
-              <option value="customer">Customer</option>
-              <option value="worker">Worker</option>
-            </select>
-          </div>
-
-          {/* Error Message */}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800"
+    <PageTransition>
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br">
+        <motion.div 
+          className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl"
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ 
+            duration: 0.5,
+            type: "spring",
+            stiffness: 120,
+            damping: 15
+          }}
+        >
+          <motion.div
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
           >
-            Login
-          </button>
-        </form>
+            <div className="text-center mb-6">
+              <LogIn size={40} className="mx-auto text-blue-900 mb-2" />
+              <h2 className="text-2xl font-bold text-blue-900">Login</h2>
+            </div>
+          </motion.div>
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:underline">
-              Register here
-            </a>
-          </p>
-        </div>
+          {/* Success Message */}
+          {successMessage && (
+            <motion.div 
+              className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center">
+                <UserCheck size={18} className="mr-2 text-green-600" />
+                {successMessage}
+              </div>
+            </motion.div>
+          )}
+
+          <motion.form 
+            onSubmit={handleSubmit} 
+            className="space-y-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  required
+                />
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  required
+                />
+              </div>
+            </motion.div>
+
+            {/* Role Selection */}
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+            >
+              <label className="block text-gray-700 font-semibold mb-1">Select Role</label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="customer">Customer</option>
+                <option value="worker">Worker</option>
+              </select>
+            </motion.div>
+
+            {/* Error Message */}
+            {error && (
+              <motion.p 
+                className="text-red-500 text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {error}
+              </motion.p>
+            )}
+
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+            >
+              <AnimatedButton
+                type="submit"
+                className="w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition-colors duration-200"
+              >
+                Login
+              </AnimatedButton>
+            </motion.div>
+          </motion.form>
+
+          <motion.div 
+            className="mt-6 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+          >
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <motion.a 
+                href="/register" 
+                className="text-blue-600 hover:underline font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Register here
+              </motion.a>
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+    </PageTransition>
   );
 };
 

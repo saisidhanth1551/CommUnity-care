@@ -7,6 +7,9 @@ import {
   Eye, X, Calendar, MapPin, Phone, Mail, User
 } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { motion } from "framer-motion";
+import { PageTransition, AnimatedButton, AnimatedList, AnimatedListItem } from "../components/AnimatedComponents";
+import { toast, Toaster } from "react-hot-toast";
 
 // Rejection Dialog Component
 const RejectionDialog = ({ isOpen, onClose, onConfirm, requestId }) => {
@@ -281,6 +284,17 @@ const WorkerDashboard = () => {
   const [requestToComplete, setRequestToComplete] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Add state for tabs and active tab
+  const [activeTab, setActiveTab] = useState("all");
+  
+  // Define tabs for the dashboard
+  const tabs = [
+    { id: "all", name: "All Requests", count: requests.length },
+    { id: "pending", name: "Pending", count: requests.filter(r => r.status === 'Pending').length },
+    { id: "assigned", name: "Assigned to Me", count: requests.filter(r => r.status === 'Assigned' && r.worker && r.worker._id === localStorage.getItem('userId')).length },
+    { id: "accepted", name: "Accepted", count: requests.filter(r => r.status === 'Accepted').length },
+    { id: "completed", name: "Completed", count: requests.filter(r => r.status === 'Completed').length }
+  ];
 
   // Fetch Service Requests
   useEffect(() => {
@@ -300,33 +314,14 @@ const WorkerDashboard = () => {
         if (userResponse.data && userResponse.data._id) {
           const currentUserId = userResponse.data._id;
           localStorage.setItem("userId", currentUserId);
-          console.log("Current user ID:", currentUserId);
-        }
-        
-        console.log("Fetched requests:", data);
-        
-        // Debug assigned requests
-        const assignedToMe = data.filter(req => 
-          req.status === 'Assigned' && 
-          req.worker && 
-          req.worker._id === localStorage.getItem('userId')
-        );
-        
-        console.log("Requests assigned to me:", assignedToMe);
-        
-        if (assignedToMe.length > 0) {
-          assignedToMe.forEach(req => {
-            console.log(`Request ${req._id} worker ID:`, req.worker._id);
-            console.log(`My user ID from localStorage:`, localStorage.getItem('userId'));
-            console.log(`Do they match?`, req.worker._id === localStorage.getItem('userId'));
-          });
         }
         
         setRequests(data);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching requests:", err);
         setError("Failed to fetch service requests.");
-      } finally {
+        toast.error("Failed to load service requests");
         setLoading(false);
       }
     };
@@ -528,32 +523,35 @@ const WorkerDashboard = () => {
     }
   };
 
+  const handleStatusFilterChange = (e) => setStatusFilter(e.target.value);
+  const handleCategoryFilterChange = (e) => setCategoryFilter(e.target.value);
+
   const getCategoryIcon = (category) => {
-    const icons = {
-      Electrical: <Plug size={18} className="text-yellow-600" />,
-      Gas: <Flame size={18} className="text-red-500" />,
-      Medical: <HeartPulse size={18} className="text-pink-600" />,
-      Hospitality: <Hotel size={18} className="text-purple-500" />,
-      Plumbing: <Wrench size={18} className="text-blue-500" />,
-      Cleaning: <Sparkles size={18} className="text-green-500" />,
-      "IT Support": <ServerCog size={18} className="text-indigo-500" />,
-      Carpentry: <Hammer size={18} className="text-amber-700" />,
-      "Appliance Repair": <Plug size={18} className="text-gray-500" />,
-      Gardening: <Leaf size={18} className="text-green-600" />,
-      "Moving Help": <Truck size={18} className="text-blue-700" />,
-      Groceries: <ShoppingCart size={18} className="text-orange-600" />,
-      Other: <HelpCircle size={18} className="text-gray-600" />,
-    };
-    return icons[category] || null;
+    switch (category) {
+      case "Electrical": return <Plug size={18} className="text-yellow-600" />;
+      case "Gas": return <Flame size={18} className="text-red-500" />;
+      case "Medical": return <HeartPulse size={18} className="text-pink-600" />;
+      case "Hospitality": return <Hotel size={18} className="text-purple-500" />;
+      case "Plumbing": return <Wrench size={18} className="text-blue-500" />;
+      case "Cleaning": return <Sparkles size={18} className="text-green-500" />;
+      case "IT Support": return <ServerCog size={18} className="text-indigo-500" />;
+      case "Carpentry": return <Hammer size={18} className="text-amber-700" />;
+      case "Appliance Repair": return <Plug size={18} className="text-gray-500" />;
+      case "Gardening": return <Leaf size={18} className="text-green-600" />;
+      case "Moving Help": return <Truck size={18} className="text-blue-700" />;
+      case "Groceries": return <ShoppingCart size={18} className="text-orange-600" />;
+      case "Other": return <HelpCircle size={18} className="text-gray-600" />;
+      default: return null;
+    }
   };
 
   const getStatusIcon = (status) => {
     const lower = status.toLowerCase();
-    if (lower === "pending") return <Clock size={14} />;
-    if (lower === "assigned") return <AlertCircle size={14} />;
-    if (lower === "accepted") return <CheckCircle size={14} />;
-    if (lower === "completed") return <CheckCircle size={14} />;
-    if (lower === "rejected") return <XCircle size={14} />;
+    if (lower === "pending") return <Clock size={14} className="mr-1" />;
+    if (lower === "assigned") return <AlertCircle size={14} className="mr-1" />;
+    if (lower === "accepted") return <CheckCircle size={14} className="mr-1" />;
+    if (lower === "completed") return <CheckCircle size={14} className="mr-1" />;
+    if (lower === "rejected") return <XCircle size={14} className="mr-1" />;
     return null;
   };
 
@@ -568,9 +566,21 @@ const WorkerDashboard = () => {
   };
 
   const filteredRequests = requests.filter((r) => {
-    const matchStatus = statusFilter === "All" || r.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchCategory = categoryFilter === "All" || r.category.toLowerCase() === categoryFilter.toLowerCase();
-    return matchStatus && matchCategory;
+    if (activeTab === "all") {
+      // When "all" is selected, apply the status and category filters
+      const matchStatus = statusFilter === "All" || r.status.toLowerCase() === statusFilter.toLowerCase();
+      const matchCategory = categoryFilter === "All" || r.category.toLowerCase() === categoryFilter.toLowerCase();
+      return matchStatus && matchCategory;
+    } else if (activeTab === "pending") {
+      return r.status === "Pending";
+    } else if (activeTab === "assigned") {
+      return r.status === "Assigned" && r.worker && r.worker._id === localStorage.getItem('userId');
+    } else if (activeTab === "accepted") {
+      return r.status === "Accepted";
+    } else if (activeTab === "completed") {
+      return r.status === "Completed";
+    }
+    return true;
   });
 
   // Add a filter to show assigned requests for this worker at the top
@@ -591,202 +601,296 @@ const WorkerDashboard = () => {
   });
 
   return (
-    <>
-      <Navbar />
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 py-10 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold text-center text-blue-900 mb-10">Worker Dashboard</h1>
+    <PageTransition>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <Toaster position="top-center" />
+        
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <motion.h1 
+            className="text-3xl font-bold text-gray-900 mb-2"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Worker Dashboard
+          </motion.h1>
+          <motion.p 
+            className="text-gray-600 mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            Manage service requests and track your work
+          </motion.p>
+          
+          {/* Dashboard Stats */}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">New Requests</h3>
+              <p className="text-3xl font-bold text-blue-600">
+                {requests.filter(r => r.status === 'Pending' || r.status === 'Assigned').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Accepted</h3>
+              <p className="text-3xl font-bold text-green-600">
+                {requests.filter(r => r.status === 'Accepted').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Completed</h3>
+              <p className="text-3xl font-bold text-purple-600">
+                {requests.filter(r => r.status === 'Completed').length}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Rejected</h3>
+              <p className="text-3xl font-bold text-gray-600">
+                {requests.filter(r => r.status === 'Rejected').length}
+              </p>
+            </div>
+          </motion.div>
 
-          <div className="mb-6 text-center">
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-3 w-1/4 rounded-lg border border-gray-300 mx-2">
-              {["All", "Pending", "Assigned", "Accepted", "Completed", "Rejected"].map((status) => (
-                <option key={status} value={status}>{status} Jobs</option>
-              ))}
+          {/* Filter Controls */}
+          <motion.div 
+            className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-wrap gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <select 
+              value={statusFilter} 
+              onChange={handleStatusFilterChange} 
+              className="p-3 w-1/4 rounded-lg border border-gray-300 mx-2"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Completed">Completed</option>
+              <option value="Rejected">Rejected</option>
             </select>
 
-            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="p-3 w-1/4 rounded-lg border border-gray-300 mx-2">
-              {["All", "Electrical", "Gas", "Medical", "Hospitality", "Plumbing", "Cleaning", "IT Support", "Carpentry", "Appliance Repair", "Gardening", "Moving Help", "Groceries", "Other"]
-                .map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+            <select 
+              value={categoryFilter} 
+              onChange={handleCategoryFilterChange} 
+              className="p-3 w-1/4 rounded-lg border border-gray-300 mx-2"
+            >
+              <option value="All">All Categories</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Gas">Gas</option>
+              <option value="Medical">Medical</option>
+              <option value="Hospitality">Hospitality</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="IT Support">IT Support</option>
+              <option value="Carpentry">Carpentry</option>
+              <option value="Appliance Repair">Appliance Repair</option>
+              <option value="Gardening">Gardening</option>
+              <option value="Moving Help">Moving Help</option>
+              <option value="Groceries">Groceries</option>
+              <option value="Other">Other</option>
             </select>
+          </motion.div>
+          
+          {/* Tabs */}
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8">
+                {tabs.map((tab, index) => (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`py-4 px-3 text-center border-b-2 font-medium text-sm sm:text-base ${
+                      activeTab === tab.id
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index, duration: 0.3 }}
+                  >
+                    {tab.name} {tab.count > 0 && <span className="ml-2 bg-blue-100 text-blue-600 py-1 px-2 rounded-full text-xs">{tab.count}</span>}
+                  </motion.button>
+                ))}
+              </nav>
+            </div>
           </div>
 
-          {/* Assigned requests notification */}
-          {sortedRequests.some(req => req.status === 'Assigned' && req.worker && req.worker._id === localStorage.getItem('userId')) && (
-            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-              <p className="text-blue-800 font-semibold">
-                <AlertCircle className="inline-block mr-2" size={20} />
-                You have requests waiting for your confirmation!
-              </p>
-              <p className="text-sm text-blue-600 mt-1">
-                Customers have specifically requested your services. Please accept or reject these requests.
-              </p>
-            </div>
-          )}
-
-          {loading ? (
-            <p className="text-center text-gray-500">Loading service requests...</p>
-          ) : error ? (
-            <p className="text-center text-red-500">{error}</p>
-          ) : sortedRequests.length === 0 ? (
-            <p className="text-center text-gray-500">No service requests found.</p>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedRequests.map((req) => {
-                // Check if this request is assigned to this worker
-                const isAssignedToMe = req.status === 'Assigned' && 
-                                     req.worker && 
-                                     req.worker._id === localStorage.getItem('userId');
-                
-                // Check if this is an accepted request by this worker
-                const isAcceptedByMe = req.status === 'Accepted' && 
-                                    req.worker && 
-                                    req.worker._id === localStorage.getItem('userId');
-                
-                return (
-                  <div 
-                    key={req._id} 
-                    className={`bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all ${
-                      isAssignedToMe ? 'border-2 border-blue-400 ring-2 ring-blue-200' : 
-                      isAcceptedByMe ? 'border-2 border-green-400' : ''
-                    }`}
-                  >
-                    {isAssignedToMe && (
-                      <div className="mb-3 p-2 bg-blue-50 rounded-lg text-blue-800 text-sm">
-                        <AlertCircle className="inline-block mr-1" size={16} />
-                        A customer has selected you specifically for this job
-                      </div>
-                    )}
+          {/* Requests */}
+          <motion.div 
+            className="mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Service Requests</h2>
+            
+            {loading ? (
+              <div className="text-center py-10">
+                <p className="text-gray-600">Loading requests...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-10 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-red-600">{error}</p>
+              </div>
+            ) : filteredRequests.length === 0 ? (
+              <motion.div 
+                className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <HelpCircle size={40} className="mx-auto text-gray-400 mb-3" />
+                <h3 className="text-lg font-medium text-gray-800 mb-1">No requests found</h3>
+                <p className="text-gray-500">There are no {tabs.find(tab => tab.id === activeTab)?.name.toLowerCase() || ''} at the moment.</p>
+              </motion.div>
+            ) : (
+              <AnimatedList>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedRequests.map((request, index) => {
+                    const isAssignedToMe = request.status === 'Assigned' && request.worker && request.worker._id === localStorage.getItem('userId');
                     
-                    {isAcceptedByMe && (
-                      <div className="mb-3 p-2 bg-green-50 rounded-lg text-green-800 text-sm">
-                        <CheckCircle className="inline-block mr-1" size={16} />
-                        You're working on this request
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center gap-2 text-blue-800 text-xl font-semibold capitalize">
-                        {getCategoryIcon(req.category)}
-                        {req.category}
-                      </div>
-                      <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusClass(req.status)}`}>
-                        {getStatusIcon(req.status)} {req.status}
-                      </span>
-                    </div>
+                    return (
+                      <AnimatedListItem key={request._id}>
+                        <div className={`bg-white border border-gray-200 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+                          isAssignedToMe ? 'border-blue-300 bg-blue-50' : ''
+                        }`}>
+                          <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center gap-2 text-blue-800 text-xl font-semibold capitalize">
+                              {getCategoryIcon(request.category)}
+                              <span>{request.category}</span>
+                            </div>
+                            <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full shadow-sm ${getStatusClass(request.status)}`}>
+                              {getStatusIcon(request.status)}
+                              {request.status}
+                            </span>
+                          </div>
 
-                    <h3 className="text-gray-800 font-medium mb-2">{req.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2">{req.location}</p>
+                          <h3 className="text-gray-800 font-medium mb-2">{request.title}</h3>
+                          <p className="text-gray-600 text-sm mb-2">
+                            <MapPin size={14} className="inline mr-1" /> 
+                            {request.location}
+                          </p>
+                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{request.description}</p>
 
-                    <div className="mt-4 text-gray-700 text-sm">
-                      <p><strong>Customer:</strong> {req.customer?.name}</p>
-                      <p><strong>Phone:</strong> {req.customer?.phoneNumber || 'N/A'}</p>
-                    </div>
+                          {isAssignedToMe && (
+                            <div className="mb-3 p-2 bg-blue-100 rounded-lg text-blue-800 text-sm flex items-center">
+                              <AlertCircle className="inline-block mr-2" size={16} />
+                              A customer has selected you specifically for this job
+                            </div>
+                          )}
+                          
+                          {request.status === 'Accepted' && (
+                            <div className="mb-3 p-2 bg-green-100 rounded-lg text-green-800 text-sm flex items-center">
+                              <CheckCircle className="inline-block mr-2" size={16} />
+                              You're working on this request
+                            </div>
+                          )}
 
-                    {/* Action buttons */}
-                    <div className="mt-4 flex justify-between items-center">
-                      {/* View Details Button - Always visible */}
-                      <button
-                        onClick={() => handleViewDetails(req._id)}
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <Eye size={18} />
-                        View Details
-                      </button>
-                      
-                      <div className="flex space-x-2">
-                        {/* Show accept button for pending requests */}
-                        {req.status === 'Pending' && (
-                          <button
-                            onClick={() => handleAccept(req._id)}
-                            disabled={processingRequestId === req._id}
-                            className={`px-4 py-2 ${
-                              processingRequestId === req._id && processingAction === 'accepting'
-                                ? "bg-gray-500 cursor-not-allowed" 
-                                : "bg-green-600 hover:bg-green-700"
-                            } text-white rounded-lg`}
-                          >
-                            {processingRequestId === req._id && processingAction === 'accepting' ? "Accepting..." : "Accept"}
-                          </button>
-                        )}
-                        
-                        {/* For assigned requests to this worker */}
-                        {isAssignedToMe && (
-                          <>
-                            <button
-                              onClick={() => handleAccept(req._id)}
-                              disabled={processingRequestId === req._id}
-                              className={`px-3 py-2 ${
-                                processingRequestId === req._id && processingAction === 'accepting'
-                                  ? "bg-gray-500 cursor-not-allowed" 
-                                  : "bg-green-600 hover:bg-green-700"
-                              } text-white text-sm rounded-lg`}
-                            >
-                              {processingRequestId === req._id && processingAction === 'accepting' ? "Accepting..." : "Accept Job"}
-                            </button>
+                          {/* Customer Preview */}
+                          {request.customer && (
+                            <div className="mt-3 p-2 bg-gray-50 border border-gray-100 rounded-lg">
+                              <div className="flex items-center">
+                                {request.customer.profilePicture ? (
+                                  <img src={`http://localhost:5000${request.customer.profilePicture}`} alt="Customer" className="w-6 h-6 rounded-full mr-2" />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-800 font-bold flex items-center justify-center mr-2">
+                                    {request.customer.name ? request.customer.name.charAt(0) : '?'}
+                                  </div>
+                                )}
+                                <span className="text-sm">Customer: {request.customer.name}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex justify-between items-center">
+                            <div className="text-sm text-gray-500">
+                              <Calendar size={14} className="inline mr-1" />
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </div>
                             
-                            <button
-                              onClick={() => openRejectDialog(req._id)}
-                              disabled={processingRequestId === req._id}
-                              className={`px-3 py-2 ${
-                                processingRequestId === req._id && processingAction === 'rejecting'
-                                  ? "bg-gray-500 cursor-not-allowed" 
-                                  : "bg-red-600 hover:bg-red-700"
-                              } text-white text-sm rounded-lg`}
-                            >
-                              {processingRequestId === req._id && processingAction === 'rejecting' ? "Rejecting..." : "Decline"}
-                            </button>
-                          </>
-                        )}
-                        
-                        {/* Show complete button for accepted requests by this worker */}
-                        {isAcceptedByMe && (
-                          <button
-                            onClick={() => openCompletionDialog(req._id)}
-                            disabled={processingRequestId === req._id}
-                            className={`px-4 py-2 ${
-                              processingRequestId === req._id && processingAction === 'completing'
-                                ? "bg-gray-500 cursor-not-allowed" 
-                                : "bg-green-600 hover:bg-green-700"
-                            } text-white rounded-lg`}
-                          >
-                            {processingRequestId === req._id && processingAction === 'completing' 
-                              ? "Completing..." 
-                              : "Mark Complete"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                            <div className="flex space-x-2">
+                              <AnimatedButton
+                                onClick={() => handleViewDetails(request._id)}
+                                className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 flex items-center text-sm"
+                              >
+                                <Eye size={14} className="mr-1" /> View
+                              </AnimatedButton>
+                              
+                              {request.status === 'Pending' || request.status === 'Assigned' ? (
+                                <>
+                                  <AnimatedButton
+                                    onClick={() => handleAccept(request._id)}
+                                    className="px-3 py-1 bg-green-50 text-green-600 rounded-md hover:bg-green-100 flex items-center text-sm"
+                                    disabled={processingRequestId === request._id}
+                                  >
+                                    <CheckCircle size={14} className="mr-1" /> 
+                                    {processingRequestId === request._id && processingAction === 'accepting' ? 'Accepting...' : 'Accept'}
+                                  </AnimatedButton>
+                                  
+                                  <AnimatedButton
+                                    onClick={() => openRejectDialog(request._id)}
+                                    className="px-3 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center text-sm"
+                                    disabled={processingRequestId === request._id}
+                                  >
+                                    <XCircle size={14} className="mr-1" /> 
+                                    {processingRequestId === request._id && processingAction === 'rejecting' ? 'Rejecting...' : 'Reject'}
+                                  </AnimatedButton>
+                                </>
+                              ) : request.status === 'Accepted' ? (
+                                <AnimatedButton
+                                  onClick={() => openCompletionDialog(request._id)}
+                                  className="px-3 py-1 bg-purple-50 text-purple-600 rounded-md hover:bg-purple-100 flex items-center text-sm"
+                                  disabled={processingRequestId === request._id}
+                                >
+                                  <CheckCircle size={14} className="mr-1" /> 
+                                  {processingRequestId === request._id && processingAction === 'completing' ? 'Completing...' : 'Complete'}
+                                </AnimatedButton>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      </AnimatedListItem>
+                    );
+                  })}
+                </div>
+              </AnimatedList>
+            )}
+          </motion.div>
         </div>
-      </section>
-      
-      {/* Rejection Dialog */}
-      <RejectionDialog 
-        isOpen={rejectionDialogOpen}
-        onClose={() => setRejectionDialogOpen(false)}
-        onConfirm={handleReject}
-        requestId={requestToReject}
-      />
-      
-      {/* Completion Dialog */}
-      <CompletionDialog 
-        isOpen={completionDialogOpen}
-        onClose={() => setCompletionDialogOpen(false)}
-        onConfirm={handleComplete}
-        requestId={requestToComplete}
-      />
-
-      {/* Request Details Modal */}
-      <RequestDetailsModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        request={selectedRequest}
-      />
-    </>
+        
+        {/* Dialogs */}
+        <RejectionDialog
+          isOpen={rejectionDialogOpen}
+          onClose={() => setRejectionDialogOpen(false)}
+          onConfirm={handleReject}
+          requestId={requestToReject}
+        />
+        
+        <CompletionDialog
+          isOpen={completionDialogOpen}
+          onClose={() => setCompletionDialogOpen(false)}
+          onConfirm={handleComplete}
+          requestId={requestToComplete}
+        />
+        
+        {/* Request Details Modal */}
+        <RequestDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          request={selectedRequest}
+        />
+      </div>
+    </PageTransition>
   );
 };
 
