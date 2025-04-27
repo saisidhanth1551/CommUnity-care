@@ -153,35 +153,105 @@ export const getUser = asyncHandler(async (req, res) => {
 
 // Update user data
 export const updateUser = asyncHandler(async (req, res) => {
-  const { name, email, phoneNumber, roles, categories } = req.body;
+  try {
+    const { name, email, phoneNumber, roles, categories } = req.body;
 
-  const updateData = { 
-    name, 
-    email, 
-    phoneNumber
-  };
-  
-  if (roles && Array.isArray(roles)) {
-    updateData.roles = roles;
+    // Validate at least one role
+    if (roles && Array.isArray(roles) && roles.length === 0) {
+      return res.status(400).json({ 
+        message: 'User must have at least one role'
+      });
+    }
+
+    // Validate roles contain only allowed values
+    if (roles && Array.isArray(roles)) {
+      const validRoles = ['customer', 'worker'];
+      const allRolesValid = roles.every(role => validRoles.includes(role));
+      
+      if (!allRolesValid) {
+        return res.status(400).json({ 
+          message: 'Invalid role value detected'
+        });
+      }
+    }
+
+    const updateData = { 
+      name, 
+      email, 
+      phoneNumber
+    };
+    
+    if (roles && Array.isArray(roles)) {
+      updateData.roles = roles;
+    }
+    
+    // Clear categories if worker role is not included
+    if (roles && !roles.includes('worker')) {
+      updateData.categories = [];
+    } 
+    // Only update categories if user is a worker
+    else if (roles && roles.includes('worker') && categories && Array.isArray(categories)) {
+      updateData.categories = categories;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updateData,
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      message: 'Failed to update profile',
+      error: error.message
+    });
   }
-  
-  // Only update categories if user is a worker
-  if (updateData.roles?.includes('worker') && categories && Array.isArray(categories)) {
-    updateData.categories = categories;
+});
+
+// Upload profile image
+export const uploadProfileImage = asyncHandler(async (req, res) => {
+  try {
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Get the file path
+    const imagePath = `/uploads/profiles/${req.file.filename}`;
+
+    // Update the user's profile with the image path
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePicture: imagePath },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'Profile image uploaded successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Profile image upload error:', error);
+    res.status(500).json({
+      message: 'Failed to upload profile image',
+      error: error.message
+    });
   }
-
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    updateData,
-    { new: true }
-  ).select('-password');
-
-  if (!user) {
-    res.status(404);
-    throw new Error('User not found');
-  }
-
-  res.json(user);
 });
 
 // Delete user
@@ -194,4 +264,31 @@ export const deleteUser = asyncHandler(async (req, res) => {
   }
 
   res.json({ message: 'User deleted successfully' });
+});
+
+// Remove profile picture
+export const removeProfilePicture = asyncHandler(async (req, res) => {
+  try {
+    // Update the user's profile to set profilePicture to null
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { profilePicture: null },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'Profile picture removed successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Profile picture removal error:', error);
+    res.status(500).json({
+      message: 'Failed to remove profile picture',
+      error: error.message
+    });
+  }
 });

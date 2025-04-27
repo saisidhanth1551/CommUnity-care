@@ -109,7 +109,7 @@ export const getWorkersByCategory = async (req, res) => {
     const workers = await User.find({
       roles: { $in: ['worker'] },
       categories: { $in: [category] }
-    }).select('name email phoneNumber rating categories');
+    }).select('name email phoneNumber rating categories profilePicture');
 
     if (!workers.length) {
       return res.status(404).json({ message: 'No workers found for this category.' });

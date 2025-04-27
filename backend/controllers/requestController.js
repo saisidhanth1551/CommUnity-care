@@ -59,7 +59,7 @@ export const createRequest = async (req, res) => {
 export const getAllRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find()
-      .populate('customer', 'name phoneNumber email')
+      .populate('customer', 'name phoneNumber email profilePicture')
       .populate('worker', 'name phoneNumber email profilePicture');
 
     res.status(200).json(requests);
@@ -73,7 +73,7 @@ export const getAllRequests = async (req, res) => {
 export const getMyRequests = async (req, res) => {
   try {
     const requests = await ServiceRequest.find({ customer: req.user._id })
-      .populate('customer', 'name phoneNumber email')
+      .populate('customer', 'name phoneNumber email profilePicture')
       .populate('worker', 'name phoneNumber email profilePicture');
 
     if (!requests.length) {
@@ -238,8 +238,8 @@ export const completeRequest = async (req, res) => {
     console.log('Request ID to complete:', id);
     
     const request = await ServiceRequest.findById(id)
-      .populate('customer', 'name email')
-      .populate('worker', 'name email');
+      .populate('customer', 'name email phoneNumber profilePicture')
+      .populate('worker', 'name email phoneNumber profilePicture');
 
     if (!request) {
       console.log('Request not found with ID:', id);
