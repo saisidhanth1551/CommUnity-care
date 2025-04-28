@@ -201,172 +201,184 @@ const RequestDetailsModal = ({ isOpen, onClose, request, onRateWorker }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   // Check if this request is completed and hasn't been rated yet
   const canRateWorker = request.status === 'Completed' && !request.workerRating;
 
   return (
-    <AnimatedModal isOpen={isOpen} onClose={onClose}>
-      <div className="p-6">
-        <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-6">
-          <motion.h3 
-            className="text-2xl font-bold text-gray-800"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            Request Details
-          </motion.h3>
-          <motion.button 
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100"
-            whileHover={{ scale: 1.1, backgroundColor: "rgb(243,244,246)" }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <X size={24} className="text-gray-500" />
-          </motion.button>
-        </div>
-        
-        <div className="space-y-6">
-          {/* Request Status */}
-          <motion.div 
-            className="flex justify-between items-center"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            <h4 className="text-lg font-semibold text-gray-700">Status</h4>
-            <motion.span 
-              className={`px-3 py-1 rounded-full ${getStatusClass(request.status)}`}
-              whileHover={{ scale: 1.05 }}
-            >
-              {request.status}
-            </motion.span>
-          </motion.div>
-          
-          {/* Request Information */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <h4 className="text-lg font-semibold text-gray-700 mb-3">Request Information</h4>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-              <div className="flex items-start">
-                <span className="font-medium w-32 text-gray-600">Title:</span>
-                <span className="text-gray-800">{request.title}</span>
-              </div>
-              <div className="flex items-start">
-                <span className="font-medium w-32 text-gray-600">Category:</span>
-                <span className="text-gray-800">{request.category}</span>
-              </div>
-              <div className="flex items-start">
-                <span className="font-medium w-32 text-gray-600">Description:</span>
-                <span className="text-gray-800">{request.description}</span>
-              </div>
-              <div className="flex items-start">
-                <span className="font-medium w-32 text-gray-600">Location:</span>
-                <div className="flex items-center">
-                  <MapPin size={16} className="mr-1 text-gray-500" />
-                  <span className="text-gray-800">{request.location}</span>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <span className="font-medium w-32 text-gray-600">Created:</span>
-                <div className="flex items-center">
-                  <Calendar size={16} className="mr-1 text-gray-500" />
-                  <span className="text-gray-800">{formatDate(request.createdAt)}</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          
-          {/* Worker Information - only show if assigned */}
-          {request.worker && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 }}
-            >
-              <h4 className="text-lg font-semibold text-gray-700 mb-3">Worker Information</h4>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center space-x-4 mb-3">
-                  {request.worker.profilePicture ? (
-                    <img 
-                      src={`http://localhost:5000${request.worker.profilePicture}`} 
-                      alt={request.worker.name} 
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center">
-                      <User size={24} className="text-blue-600" />
-                    </div>
-                  )}
-                  <div>
-                    <h5 className="font-semibold text-blue-900">{request.worker.name}</h5>
-                    <div className="text-sm text-blue-700 mt-1">
-                      {request.worker.rating ? (
-                        <div className="flex items-center">
-                          <Star size={16} className="text-yellow-500 fill-yellow-500 mr-1" />
-                          <span>{request.worker.rating} / 5</span>
-                        </div>
-                      ) : (
-                        <span>New Worker</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center">
-                    <Mail size={14} className="text-blue-600 mr-2" />
-                    <span>{request.worker.email}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Phone size={14} className="text-blue-600 mr-2" />
-                    <span>{request.worker.phoneNumber}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Rejection Message - only show if rejected */}
-          {request.status === 'Rejected' && request.rejectionMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="bg-red-50 border border-red-100 rounded-lg p-4"
-            >
-              <h4 className="font-semibold text-red-800 mb-2">Rejection Reason:</h4>
-              <p className="text-red-700">{request.rejectionMessage}</p>
-            </motion.div>
-          )}
-          
-          {/* Action Buttons */}
-          <motion.div 
-            className="flex justify-end mt-6 space-x-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-          >
-            {canRateWorker && (
-              <AnimatedButton
-                className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
-                onClick={() => onRateWorker(request)}
-              >
-                Rate Worker
-              </AnimatedButton>
-            )}
-            <AnimatedButton
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-4">
+            <h3 className="text-2xl font-bold text-gray-800">Request Details</h3>
+            <button 
               onClick={onClose}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Close modal"
             >
-              Close
-            </AnimatedButton>
-          </motion.div>
+              <X size={24} className="text-gray-500" />
+            </button>
+          </div>
+          
+          <div className="space-y-6">
+            {/* Request Status */}
+            <div className="flex justify-between items-center">
+              <h4 className="text-lg font-semibold text-gray-700">Status</h4>
+              <span className={`px-3 py-1 rounded-full ${getStatusClass(request.status)}`}>
+                {request.status}
+              </span>
+            </div>
+            
+            {/* Completed Request Banner */}
+            {request.status === 'Completed' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start">
+                <CheckCircle size={24} className="text-green-600 mr-3 mt-0.5" />
+                <div>
+                  <h5 className="font-semibold text-green-800">Service Completed</h5>
+                  <p className="text-green-700 text-sm mt-1">
+                    This service request has been completed.
+                  </p>
+                  <p className="text-green-600 text-sm mt-2">
+                    Completed on: {formatDate(request.updatedAt)}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {/* Request Details */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              <h4 className="text-lg font-semibold text-gray-700 mb-2">Request Information</h4>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                <div className="flex items-start">
+                  <span className="font-medium w-32 text-gray-600">Title:</span>
+                  <span className="text-gray-800">{request.title}</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="font-medium w-32 text-gray-600">Category:</span>
+                  <span className="text-gray-800">{request.category}</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="font-medium w-32 text-gray-600">Description:</span>
+                  <span className="text-gray-800">{request.description}</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="font-medium w-32 text-gray-600">Location:</span>
+                  <div className="flex items-center">
+                    <MapPin size={16} className="mr-1 text-gray-500" />
+                    <span className="text-gray-800">{request.location}</span>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <span className="font-medium w-32 text-gray-600">Created:</span>
+                  <div className="flex items-center">
+                    <Calendar size={16} className="mr-1 text-gray-500" />
+                    <span className="text-gray-800">{formatDate(request.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Worker Information - only show if assigned */}
+            {request.worker && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <h4 className="text-lg font-semibold text-gray-700 mb-3">Worker Information</h4>
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-4 mb-3">
+                    {request.worker.profilePicture ? (
+                      <img 
+                        src={`http://localhost:5000${request.worker.profilePicture}`} 
+                        alt={request.worker.name} 
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center">
+                        <User size={24} className="text-blue-600" />
+                      </div>
+                    )}
+                    <div>
+                      <h5 className="font-semibold text-blue-900">{request.worker.name}</h5>
+                      <div className="text-sm text-blue-700 mt-1">
+                        {request.worker.rating ? (
+                          <div className="flex items-center">
+                            <Star size={16} className="text-yellow-500 fill-yellow-500 mr-1" />
+                            <span>{request.worker.rating} / 5</span>
+                          </div>
+                        ) : (
+                          <span>New Worker</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 border-t border-blue-100 pt-3">
+                    <div className="flex items-center">
+                      <Mail size={14} className="text-blue-600 mr-2" />
+                      <span>{request.worker.email}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Phone size={14} className="text-blue-600 mr-2" />
+                      <span>{request.worker.phoneNumber}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            
+            {/* Rejection Message - only show if rejected */}
+            {request.status === 'Rejected' && request.rejectionMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
+                className="bg-red-50 border border-red-100 rounded-lg p-4"
+              >
+                <h4 className="font-semibold text-red-800 mb-2">Rejection Reason:</h4>
+                <p className="text-red-700">{request.rejectionMessage}</p>
+              </motion.div>
+            )}
+            
+            {/* Action Buttons */}
+            <motion.div 
+              className="flex justify-end mt-6 space-x-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              {canRateWorker && (
+                <AnimatedButton
+                  className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600"
+                  onClick={() => onRateWorker(request)}
+                >
+                  Rate Worker
+                </AnimatedButton>
+              )}
+              <AnimatedButton
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+                onClick={onClose}
+              >
+                Close
+              </AnimatedButton>
+            </motion.div>
+          </div>
         </div>
       </div>
-    </AnimatedModal>
+    </div>
   );
 };
 

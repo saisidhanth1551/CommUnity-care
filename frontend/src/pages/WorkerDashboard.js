@@ -133,15 +133,25 @@ const RequestDetailsModal = ({ isOpen, onClose, request }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-4">
             <h3 className="text-2xl font-bold text-gray-800">Request Details</h3>
             <button 
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-gray-100"
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Close modal"
             >
               <X size={24} className="text-gray-500" />
             </button>
@@ -240,14 +250,6 @@ const RequestDetailsModal = ({ isOpen, onClose, request }) => {
                       <span>{request.customer.email || 'Not provided'}</span>
                     </div>
                   </div>
-                  
-                  {/* Rejection Message */}
-                  {request.status === 'Rejected' && request.rejectionMessage && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg">
-                      <p className="font-medium text-red-800 mb-1">Your reason for declining:</p>
-                      <p className="text-red-700">{request.rejectionMessage}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -256,7 +258,7 @@ const RequestDetailsModal = ({ isOpen, onClose, request }) => {
             <div className="flex justify-end space-x-3 pt-3 border-t border-gray-200">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100"
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 Close
               </button>
@@ -837,14 +839,17 @@ const WorkerDashboard = () => {
                                     {processingRequestId === request._id && processingAction === 'accepting' ? 'Accepting...' : 'Accept'}
                                   </AnimatedButton>
                                   
-                                  <AnimatedButton
-                                    onClick={() => openRejectDialog(request._id)}
-                                    className="px-3 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center text-sm"
-                                    disabled={processingRequestId === request._id}
-                                  >
-                                    <XCircle size={14} className="mr-1" /> 
-                                    {processingRequestId === request._id && processingAction === 'rejecting' ? 'Rejecting...' : 'Reject'}
-                                  </AnimatedButton>
+                                  {/* Only show reject button for assigned requests */}
+                                  {request.status === 'Assigned' && (
+                                    <AnimatedButton
+                                      onClick={() => openRejectDialog(request._id)}
+                                      className="px-3 py-1 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center text-sm"
+                                      disabled={processingRequestId === request._id}
+                                    >
+                                      <XCircle size={14} className="mr-1" /> 
+                                      {processingRequestId === request._id && processingAction === 'rejecting' ? 'Rejecting...' : 'Reject'}
+                                    </AnimatedButton>
+                                  )}
                                 </>
                               ) : request.status === 'Accepted' ? (
                                 <AnimatedButton
